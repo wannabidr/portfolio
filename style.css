@@ -129,18 +129,56 @@ nav a,.foot-link{font-size:.91rem;text-decoration:none}nav a:hover,.foot-link:ho
 .art .views button{color:#242839;border-color:transparent;background:transparent;min-height:2.35rem;font-weight:570;padding:.25rem .75rem}
 .art .views button[aria-pressed=true]{background:#22283a;color:white}.art .views button:hover{border-color:#525b76}
 .art output{grid-column:1/-1;font-size:.94rem;line-height:1.6;min-height:1.65em}
-@media(min-width:850px) and (min-height:600px) and (prefers-reduced-motion:no-preference){
-  .hero.live{height:195svh}.hero.live .hero-inner{position:sticky;top:0;height:100svh}
-  .hero.live .art-stage{max-height:62svh}
-}
 @media(max-width:600px){.hero-inner{padding-block:1.75rem}.hero-copy{padding:0}.hero h1{font-size:clamp(3.55rem,13vw,4.9rem)}
 .art-stage{aspect-ratio:1.45}.art figcaption{margin-inline:0}.hero .art{margin-top:1.2rem}}
-.hero{transition:background-color .65s ease,color .4s ease}
-.hero[data-view="1"]{background-color:#d0d0ec}
-.hero[data-view="2"]{background-color:#202337;color:#f6f5fb}
-.hero[data-view="2"] .lede,.hero[data-view="2"] .art figcaption,.hero[data-view="2"] .drag-tip{color:#d9daeb}
-.hero[data-view="2"] .primary,.hero[data-view="2"] .views button[aria-pressed=true]{background:#cbff69;color:#191c24}
-.hero[data-view="2"] .views button{color:#f6f5fb}
-.scroll-tip{display:none}
-@media(min-width:850px) and (min-height:600px) and (prefers-reduced-motion:no-preference){.scroll-tip{display:inline}}
-@media(prefers-reduced-motion:reduce){.hero{transition:none}}
+/* The copy travels in document flow. Only the illustration stays in view. */
+.hero{
+  isolation:isolate;
+  overflow:clip;
+  background:linear-gradient(165deg,#e3e7ef 10%,#d6d6f4 38%,#b7b5ed 55%,#272b47 78%,#191b2b 100%);
+}
+.hero-inner{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;padding-block:0;gap:0}
+.chapters,.hero .art{grid-area:1/1}
+.chapter{display:flex;align-items:center;min-height:max(90svh,36rem);position:relative}
+.chapter .hero-copy{width:46%;padding:2rem 0}
+.chapter:nth-child(2){justify-content:flex-end}
+.chapter:last-child{color:#f7f6ff}
+.chapter:last-child .lede{color:#e0dfed}
+.chapter h2{font-size:clamp(3.4rem,6.8vw,7.5rem);line-height:1.1;letter-spacing:-.09em;margin:0 0 1.5rem}
+.hero .art{width:47%;align-self:start;position:sticky;top:clamp(.6rem,9svh,6rem);margin:0;
+  transform:translateX(var(--art-x,112%));color:#202536}
+.hero .art-stage{max-height:58svh}
+.hero[data-chapter="2"] .art figcaption,.hero[data-chapter="2"] .drag-tip,.hero[data-chapter="2"] .views button{color:#ecebff}
+.hero[data-chapter="2"] .art .views button[aria-pressed=true]{color:#141725;background:#cbff69}
+.scroll-tip{display:inline}
+main>section{overflow-x:clip}
+.work{position:relative;background:linear-gradient(158deg,#1a1722 20%,#28203d 76%,#191621)}
+@media (prefers-reduced-motion:no-preference){
+  .chapter .hero-copy{transform:translate3d(var(--copy-x,0px),var(--copy-y,0px),0)}
+  .hero .art-stage{transform:translateY(var(--stage-y,0px)) scale(var(--stage-scale,1))}
+  .split>.section-title,.work-head{transform:translateX(var(--title-shift,0px))}
+  .case{transform:perspective(1350px) rotateX(var(--case-tilt,0deg)) scale(var(--case-scale,1));transform-origin:center 70%}
+  .essay,.project-detail,.notes{transform:translateY(var(--body-shift,0px))}
+  .timeline li{transform:translateX(var(--row-shift,0px))}
+  #method,#career{border-radius:var(--corner,0px) var(--corner,0px) 0 0;position:relative}
+}
+@media (max-width:749px){
+  .hero-inner{display:grid;align-items:start}
+  .hero .art{width:100%;top:0;transform:none;z-index:2;padding:.3rem 0 .55rem;
+    background:var(--mobile-stage,#e3e7ef);border-bottom:1px solid #83869b77}
+  .hero .art-stage{height:clamp(7rem,23svh,13rem);aspect-ratio:auto}
+  .art figcaption{margin:0;padding:.35rem 0 0;gap:.2rem .4rem}
+  .art output{font-size:.84rem}
+  .chapter{align-items:center;padding-top:clamp(12rem,36svh,20rem);min-height:max(90svh,38rem)}
+  .chapter .hero-copy{width:100%;padding-block:1.2rem}
+  .chapter h2{font-size:clamp(2.7rem,11vw,4.2rem)}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero{background:#e3e7ef}
+  .chapter:last-child,.chapter:last-child .lede{color:var(--paper-ink)}
+  .hero .art{transform:translateX(112%)}
+  .chapter:nth-child(2){justify-content:flex-start}
+  .hero[data-chapter="2"] .art figcaption,.hero[data-chapter="2"] .drag-tip,.hero[data-chapter="2"] .views button{color:#202536}
+  .hero[data-chapter="2"] .art .views button[aria-pressed=true]{color:white;background:#22283a}
+}
+@media(max-width:749px) and (prefers-reduced-motion:reduce){.hero .art{transform:none;background:#e3e7ef}}

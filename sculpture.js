@@ -11,7 +11,6 @@ const captions = [
   '밝게 표시한 볼과 홈이 겹치면 형상을 다시 수정해야 합니다.'
 ];
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
-const scrollLayout = matchMedia('(min-width: 850px) and (min-height: 600px) and (prefers-reduced-motion: no-preference)');
 
 // A panoramic studio light rig supplies reflections without external textures.
 function studio(renderer) {
@@ -115,18 +114,8 @@ function mount() {
     if (delta+Math.abs(aim-yaw)+Math.abs(aimPitch-pitch)>.001) requestDraw();
   }
   function requestDraw(){ if (!frame && onScreen && !document.hidden && !lost) frame=requestAnimationFrame(draw); }
-  const title = hero.querySelector('h1');
-  const introduction = hero.querySelector('.lede');
-  const chapters = [
-    [title.innerHTML, introduction.textContent],
-    ['일을 작게<br>나눕니다<span class="period">.</span>',
-      '설계 변경을 요청받으면 먼저 지켜야 할 조건을 찾습니다. 설계자가 의도를 정하면 AI는 부품을 고치고 검사합니다. 어떤 판단을 누구에게 맡길지 정하는 것이 제 일입니다.'],
-    ['결과를 다시<br>살핍니다<span class="period">.</span>',
-      'CADGen-AX의 베어링 예제에서는 볼과 홈이 서로 겹쳤습니다. 팀은 AI가 검사 결과를 읽고 볼 반지름을 줄이도록 했습니다. 사용자는 수정 근거와 바뀐 형상을 함께 확인합니다.']
-  ];
+  const chapters = [...hero.querySelectorAll('.chapter')];
   function setView(index) {
-    title.innerHTML = chapters[index][0];
-    introduction.textContent = chapters[index][1];
     selected=index;
     choices.forEach((btn,i)=>btn.setAttribute('aria-pressed',String(i===index)));
     art.querySelector('output').textContent=captions[index];
@@ -134,20 +123,13 @@ function mount() {
     requestDraw();
   }
   function followScroll(){
-    if (!scrollLayout.matches) return;
-    const distance=hero.offsetHeight-hero.querySelector('.hero-inner').offsetHeight;
-    if (distance<=0) return;
-    const progress=Math.max(0,Math.min(1,-hero.getBoundingClientRect().top/distance));
-    const index=Math.round(progress*2);
-    if(index!==selected) setView(index);
+    const index = Number(hero.dataset.chapter || 0);
+    if(index !== selected) setView(index);
   }
   choices.forEach((button,index)=>button.addEventListener('click',()=>{
-    if(scrollLayout.matches){
-      const travel=hero.offsetHeight-hero.querySelector('.hero-inner').offsetHeight;
-      const start=scrollY+hero.getBoundingClientRect().top;
-      window.scrollTo({top:start+travel*index/2,behavior:'instant'});
-    }
-    setView(index);
+    const chapter = chapters[index];
+    const center = chapter.getBoundingClientRect().top + scrollY + chapter.offsetHeight/2;
+    window.scrollTo({top:center-innerHeight/2, behavior:motion.matches?'instant':'smooth'});
   }));
   let drag=null;
   stage.addEventListener('pointerdown',e=>{
@@ -177,13 +159,13 @@ function mount() {
   new ResizeObserver(resize).observe(stage);
   new IntersectionObserver(([entry])=>{onScreen=entry.isIntersecting;requestDraw()}).observe(art);
   document.addEventListener('visibilitychange',requestDraw);
-  window.addEventListener('scroll',followScroll,{passive:true});
-  scrollLayout.addEventListener('change',resize);
+  hero.addEventListener('chapterchange',followScroll);
+
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;hero.classList.remove('live');stage.tabIndex=-1});
   canvas.addEventListener('webglcontextrestored',()=>{lost=false;hero.classList.add('live');stage.tabIndex=0;resize()});
   hero.classList.add('live');
   stage.tabIndex=0;
-  setView(0);resize();
+  setView(Number(hero.dataset.chapter || 0));resize();
 }
 mount();
 
