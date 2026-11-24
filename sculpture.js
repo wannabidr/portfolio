@@ -5,11 +5,6 @@ const art = hero.querySelector('.art');
 const stage = art.querySelector('.art-stage');
 const canvas = stage.querySelector('canvas');
 const choices = [...art.querySelectorAll('.views button')];
-const captions = [
-  '두 링 사이를 구르는 볼이 회전축을 받칩니다.',
-  '링을 벌리면 그 안쪽의 홈과 볼이 드러납니다.',
-  '밝게 표시한 볼과 홈이 겹치면 형상을 다시 수정해야 합니다.'
-];
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 
 // A panoramic studio light rig supplies reflections without external textures.
@@ -89,7 +84,7 @@ function mount() {
     {shell:-.67,core:.51,cover:1.10,tilt:.49,roll:-.39,zoom:.90},
     {shell:-.19,core:.14,cover:.96,tilt:.92,roll:.09,zoom:1.09}
   ];
-  let selected = 0, values = {...views[0]}, yaw = .05, aim = 0, pitch = 0, aimPitch = 0;
+  let selected = 0, values = {...views[0]}, yaw = 0, aim = 0, pitch = 0, aimPitch = 0;
   let frame = 0, onScreen = true, lost = false;
   function draw() {
     frame = 0;
@@ -114,23 +109,12 @@ function mount() {
     if (delta+Math.abs(aim-yaw)+Math.abs(aimPitch-pitch)>.001) requestDraw();
   }
   function requestDraw(){ if (!frame && onScreen && !document.hidden && !lost) frame=requestAnimationFrame(draw); }
-  const chapters = [...hero.querySelectorAll('.chapter')];
   function setView(index) {
     selected=index;
     choices.forEach((btn,i)=>btn.setAttribute('aria-pressed',String(i===index)));
-    art.querySelector('output').textContent=captions[index];
-    hero.dataset.view=String(index);
     requestDraw();
   }
-  function followScroll(){
-    const index = Number(hero.dataset.chapter || 0);
-    if(index !== selected) setView(index);
-  }
-  choices.forEach((button,index)=>button.addEventListener('click',()=>{
-    const chapter = chapters[index];
-    const center = chapter.getBoundingClientRect().top + scrollY + chapter.offsetHeight/2;
-    window.scrollTo({top:center-innerHeight/2, behavior:motion.matches?'instant':'smooth'});
-  }));
+  choices.forEach((button,index)=>button.addEventListener('click',()=>setView(index)));
   let drag=null;
   stage.addEventListener('pointerdown',e=>{
     if (!e.isPrimary || e.button!==0) return;
@@ -154,18 +138,17 @@ function mount() {
     renderer.setSize(width,height,false);
     camera.aspect=width/height;
     camera.position.z = Math.max(6.5,6.1/camera.aspect);
-    camera.updateProjectionMatrix();followScroll();requestDraw();
+    camera.updateProjectionMatrix();requestDraw();
   }
   new ResizeObserver(resize).observe(stage);
   new IntersectionObserver(([entry])=>{onScreen=entry.isIntersecting;requestDraw()}).observe(art);
   document.addEventListener('visibilitychange',requestDraw);
-  hero.addEventListener('chapterchange',followScroll);
 
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;hero.classList.remove('live');stage.tabIndex=-1});
   canvas.addEventListener('webglcontextrestored',()=>{lost=false;hero.classList.add('live');stage.tabIndex=0;resize()});
   hero.classList.add('live');
   stage.tabIndex=0;
-  setView(Number(hero.dataset.chapter || 0));resize();
+  setView(0);resize();
 }
 mount();
 
