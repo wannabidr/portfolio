@@ -1,130 +1,189 @@
-import {
-  WebGLRenderer, Scene, PerspectiveCamera, BufferGeometry,
-  Float32BufferAttribute, ShaderMaterial, Points, AdditiveBlending
-} from './assets/three.module.js';
+import * as T from './assets/three.module.js';
 
-function mountSculpture(canvas) {
-  let renderer;
-  try {
-    renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
-  } catch {
-    return; // The static rendering is already visible.
-  }
+const hero = document.querySelector('.hero');
+const art = hero.querySelector('.art');
+const stage = art.querySelector('.art-stage');
+const canvas = stage.querySelector('canvas');
+const choices = [...art.querySelectorAll('.views button')];
+const captions = [
+  '두 링 사이를 구르는 볼이 회전축을 받칩니다.',
+  '링을 벌리면 그 안쪽의 홈과 볼이 드러납니다.',
+  '밝게 표시한 볼과 홈이 겹치면 형상을 다시 수정해야 합니다.'
+];
+const motion = matchMedia('(prefers-reduced-motion: reduce)');
+const scrollLayout = matchMedia('(min-width: 850px) and (min-height: 600px) and (prefers-reduced-motion: no-preference)');
 
-  const art = canvas.closest('.art');
-  const slider = art.querySelector('#cohesion');
-  const button = art.querySelector('#motion');
-  const motion = matchMedia('(prefers-reduced-motion: reduce)');
-  const scene = new Scene();
-  const camera = new PerspectiveCamera(36, 1, .1, 20);
-  camera.position.z = 5.6;
-
-  // Each thread traces a closed path on a twisted ribbon.
-  const geometry = new BufferGeometry();
-  const positions = [], scatter = [], phases = [];
-  let seed = 73;
-  function random() {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    return seed / 4294967296;
-  }
-  for (let thread = 0; thread < 95; thread++) {
-    const v = thread / 94 * 2 - 1;
-    for (let dot = 0; dot < 340; dot++) {
-      const a = (dot + .35 * v) / 340 * Math.PI * 2;
-      const twist = a * 2 + .55 * Math.sin(a * 3);
-      const radius = 1.13 + .19 * Math.cos(a * 3) + .56 * v * Math.cos(twist);
-      positions.push(radius * Math.cos(a), radius * Math.sin(a),
-        .5 * Math.sin(a * 3) + .66 * v * Math.sin(twist));
-      const drift = a + 1.55 * v + random() * .5;
-      const spread = .42 + random() * 1.18;
-      scatter.push(spread * Math.cos(drift), spread * Math.sin(drift), (random() - .5) * 1.6);
-      phases.push(a, v, random());
+// A panoramic studio light rig supplies reflections without external textures.
+function studio(renderer) {
+  const width = 256, height = 128;
+  const pixels = new Float32Array(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const u = x / width, v = y / height;
+      const light = v > .58 ? .53 : .09;
+      const panel = (u > .09 && u < .22 && v > .40 && v < .89)
+        || (u > .54 && u < .64 && v > .24 && v < .70) || v > .91;
+      const strip = u > .82 && u < .87 && v > .25;
+      pixels.set([light + (panel ? 5 : 0), light + (panel ? 5 : 0) + (strip ? 1.9 : 0),
+        light * 1.3 + (panel ? 5.4 : 0) + (strip ? 4 : 0), 1], (y * width + x) * 4);
     }
   }
-  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('drift', new Float32BufferAttribute(scatter, 3));
-  geometry.setAttribute('phase', new Float32BufferAttribute(phases, 3));
-  const uniforms = { cohesion: { value: slider.valueAsNumber / 100 }, pixelScale: { value: 1 } };
-  const material = new ShaderMaterial({
-    uniforms, transparent: true, depthWrite: false, blending: AdditiveBlending,
-    vertexShader: `
-      attribute vec3 drift, phase;
-      uniform float cohesion, pixelScale;
-      varying vec3 tint;
-      varying float strength;
-      void main() {
-        vec3 p = mix(drift, position, cohesion);
-        vec4 view = modelViewMatrix * vec4(p, 1.0);
-        gl_Position = projectionMatrix * view;
-        gl_PointSize = clamp((1.1 + phase.z * 1.1) * pixelScale * 5.5 / -view.z, 1.0, 6.0);
-        float stripe = .5 + .5 * sin(phase.x * 2.0 + phase.y * 1.7);
-        tint = mix(vec3(.49,.34,.96), vec3(.84,.75,1.), stripe);
-        tint = mix(tint, vec3(.73,1.,.45), smoothstep(.71,1.,stripe));
-        strength = (.31 + .54 * smoothstep(-6.8,-4.0,view.z)) * (.5 + .5*phase.z);
-      }`,
-    fragmentShader: `
-      varying vec3 tint;
-      varying float strength;
-      void main() {
-        float r = length(gl_PointCoord - .5);
-        gl_FragColor = vec4(tint, (1.0 - smoothstep(.12,.5,r)) * strength);
-      }`
-  });
-  const ribbon = new Points(geometry, material);
-  ribbon.rotation.set(.62, -.23, -.38);
-  scene.add(ribbon);
-  let playing = !motion.matches, visible = false, frame = 0, last = 0;
-  const draw = () => renderer.render(scene, camera);
-  function tick(time) {
-    if (!last || time-last >= 32) {
-      ribbon.rotation.y += last ? Math.min(time-last,80) * .00015 : 0;
-      last = time;
-      draw();
-    }
-    frame = requestAnimationFrame(tick);
-  }
-  function sync() {
-    cancelAnimationFrame(frame);
-    last = 0;
-    button.setAttribute('aria-pressed', String(playing));
-    art.querySelector('#motion-icon').textContent = playing ? 'Ⅱ' : '▷';
-    art.querySelector('#motion-text').textContent = playing ? '회전 멈춤' : '회전 시작';
-    if (playing && visible && !document.hidden) frame = requestAnimationFrame(tick);
-  }
-  function resize() {
-    const {width,height} = canvas.getBoundingClientRect();
-    if (!width || !height) return;
-    const density = Math.min(devicePixelRatio || 1, 2);
-    renderer.setPixelRatio(density);
-    renderer.setSize(width,height,false);
-    camera.aspect = width/height;
-    camera.updateProjectionMatrix();
-    uniforms.pixelScale.value = density * Math.max(.74, Math.min(width,height)/480);
-    draw();
-    art.classList.add('ready');
-  }
-  slider.addEventListener('input', () => {
-    uniforms.cohesion.value = slider.valueAsNumber / 100;
-    draw();
-  });
-  button.addEventListener('click', () => { playing = !playing; sync(); });
-  motion.addEventListener('change', () => { playing = !motion.matches; sync(); });
-  document.addEventListener('visibilitychange', sync);
-  new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; sync(); }).observe(art);
-  new ResizeObserver(resize).observe(canvas);
-  canvas.addEventListener('webglcontextlost', () => {
-    playing = false;
-    sync();
-    art.classList.remove('ready');
-    slider.parentElement.hidden = button.hidden = true;
-  });
-  canvas.addEventListener('webglcontextrestored', () => {
-    slider.parentElement.hidden = button.hidden = false;
-    resize();
-  });
-  slider.parentElement.hidden = button.hidden = false;
-  resize();
-  sync();
+  const map = new T.DataTexture(pixels,width,height,undefined,T.FloatType);
+  map.mapping = T.EquirectangularReflectionMapping;
+  map.needsUpdate = true;
+  const bake = new T.PMREMGenerator(renderer);
+  const target = bake.fromEquirectangular(map);
+  map.dispose();
+  bake.dispose();
+  return target;
 }
-mountSculpture(document.querySelector('#sculpture'));
+
+function mount() {
+  let renderer;
+  try { renderer = new T.WebGLRenderer({canvas, alpha:true, antialias:true}); }
+  catch { return; }
+  const scene = new T.Scene();
+  const lighting = studio(renderer);
+  scene.environment = lighting.texture;
+  renderer.toneMapping = T.ACESFilmicToneMapping;
+  const camera = new T.PerspectiveCamera(34,1,.1,30);
+  camera.position.z = 7;
+  const model = new T.Group();
+  scene.add(model);
+  const material = (color, metalness, roughness) => new T.MeshStandardMaterial({color,metalness,roughness,side:T.DoubleSide});
+  const steel = material(0xbec6d4, .96, .16);
+  const bright = material(0xeaf0ff, 1, .105);
+  const enamel = material(0x5254d6, .64, .21);
+  const detail = material(0xa0ce5b, .55, .23);
+  function ring(profile, finish) {
+    const points = [...profile,profile[0]].map(([r,h])=>new T.Vector2(r,h));
+    const mesh = new T.Mesh(new T.LatheGeometry(points,160),finish);
+    model.add(mesh);
+    return mesh;
+  }
+  const outer = ring([[1.25,-.24],[1.48,-.24],[1.54,-.18],[1.54,.17],[1.48,.24],
+    [1.25,.24],[1.22,.19],[1.22,.12],[1.27,.06],[1.29,0],[1.27,-.06],[1.22,-.12],[1.22,-.19]],steel);
+  const inner = ring([[.57,-.24],[.75,-.24],[.80,-.19],[.80,-.12],[.75,-.06],[.735,0],
+    [.75,.06],[.80,.12],[.80,.19],[.75,.24],[.57,.24],[.53,.19],[.53,-.19]],bright);
+  const seal = ring([[.82,0],[1.19,0],[1.20,.025],[1.17,.046],[.85,.046],[.82,.025]],enamel);
+  function bead(radius, thickness, finish, parent, height) {
+    const mesh = new T.Mesh(new T.TorusGeometry(radius,thickness,8,160),finish);
+    mesh.rotation.x = Math.PI/2;
+    mesh.position.y = height;
+    parent.add(mesh);
+  }
+  bead(1.39,.009,bright,outer,.244);
+  bead(.91,.012,detail,seal,.051);
+  bead(1.12,.013,bright,seal,.05);
+  const balls = new T.Group();
+  const sphere = new T.SphereGeometry(.245,36,24);
+  for (let i=0; i<12; i++) {
+    const a = i*Math.PI/6;
+    const mesh = new T.Mesh(sphere,bright);
+    mesh.position.set(1.012*Math.cos(a),0,1.012*Math.sin(a));
+    balls.add(mesh);
+  }
+  model.add(balls);
+
+  const views = [
+    {shell:0,core:0,cover:.32,tilt:.80,roll:-.41,zoom:1.05},
+    {shell:-.67,core:.51,cover:1.10,tilt:.49,roll:-.39,zoom:.90},
+    {shell:-.19,core:.14,cover:.96,tilt:.92,roll:.09,zoom:1.09}
+  ];
+  let selected = 0, values = {...views[0]}, yaw = .05, aim = 0, pitch = 0, aimPitch = 0;
+  let frame = 0, onScreen = true, lost = false;
+  function draw() {
+    frame = 0;
+    if (!onScreen || document.hidden || lost) return;
+    const speed = motion.matches ? 1 : .09;
+    let delta = 0;
+    for (const key of Object.keys(values)) {
+      values[key] += (views[selected][key]-values[key])*speed;
+      delta += Math.abs(views[selected][key]-values[key]);
+    }
+    yaw += (aim-yaw)*speed;
+    pitch += (aimPitch-pitch)*speed;
+    model.rotation.set(values.tilt+pitch,yaw,values.roll);
+    model.scale.setScalar(values.zoom);
+    outer.position.y = values.shell;
+    inner.position.y = values.core;
+    seal.position.y = values.cover;
+    // Cut away the dust shield to expose the ball and groove at the inspection stage.
+    seal.visible = selected !== 2;
+    balls.children[2].material = selected === 2 ? detail : bright;
+    renderer.render(scene,camera);
+    if (delta+Math.abs(aim-yaw)+Math.abs(aimPitch-pitch)>.001) requestDraw();
+  }
+  function requestDraw(){ if (!frame && onScreen && !document.hidden && !lost) frame=requestAnimationFrame(draw); }
+  const title = hero.querySelector('h1');
+  const introduction = hero.querySelector('.lede');
+  const chapters = [
+    [title.innerHTML, introduction.textContent],
+    ['일을 작게<br>나눕니다<span class="period">.</span>',
+      '설계 변경을 요청받으면 먼저 지켜야 할 조건을 찾습니다. 설계자가 의도를 정하면 AI는 부품을 고치고 검사합니다. 어떤 판단을 누구에게 맡길지 정하는 것이 제 일입니다.'],
+    ['결과를 다시<br>살핍니다<span class="period">.</span>',
+      'CADGen-AX의 베어링 예제에서는 볼과 홈이 서로 겹쳤습니다. 팀은 AI가 검사 결과를 읽고 볼 반지름을 줄이도록 했습니다. 사용자는 수정 근거와 바뀐 형상을 함께 확인합니다.']
+  ];
+  function setView(index) {
+    title.innerHTML = chapters[index][0];
+    introduction.textContent = chapters[index][1];
+    selected=index;
+    choices.forEach((btn,i)=>btn.setAttribute('aria-pressed',String(i===index)));
+    art.querySelector('output').textContent=captions[index];
+    hero.dataset.view=String(index);
+    requestDraw();
+  }
+  function followScroll(){
+    if (!scrollLayout.matches) return;
+    const distance=hero.offsetHeight-hero.querySelector('.hero-inner').offsetHeight;
+    if (distance<=0) return;
+    const progress=Math.max(0,Math.min(1,-hero.getBoundingClientRect().top/distance));
+    const index=Math.round(progress*2);
+    if(index!==selected) setView(index);
+  }
+  choices.forEach((button,index)=>button.addEventListener('click',()=>{
+    if(scrollLayout.matches){
+      const travel=hero.offsetHeight-hero.querySelector('.hero-inner').offsetHeight;
+      const start=scrollY+hero.getBoundingClientRect().top;
+      window.scrollTo({top:start+travel*index/2,behavior:'instant'});
+    }
+    setView(index);
+  }));
+  let drag=null;
+  stage.addEventListener('pointerdown',e=>{
+    if (!e.isPrimary || e.button!==0) return;
+    drag={x:e.clientX,y:e.clientY,angle:aim,pitch:aimPitch};
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener('pointermove',e=>{
+    if(!drag || !e.isPrimary) return;
+    aim=drag.angle+(e.clientX-drag.x)*.012;
+    aimPitch=Math.max(-.5,Math.min(.5,drag.pitch+(e.clientY-drag.y)*.005));
+    requestDraw();
+  });
+  stage.addEventListener('lostpointercapture',()=>{drag=null});
+  stage.addEventListener('keydown',e=>{
+    if(!['ArrowLeft','ArrowRight'].includes(e.key)) return;
+    e.preventDefault(); aim+=e.key==='ArrowLeft'?-.24:.24;requestDraw();
+  });
+  function resize(){
+    const {width,height}=stage.getBoundingClientRect();
+    renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+    renderer.setSize(width,height,false);
+    camera.aspect=width/height;
+    camera.position.z = Math.max(6.5,6.1/camera.aspect);
+    camera.updateProjectionMatrix();followScroll();requestDraw();
+  }
+  new ResizeObserver(resize).observe(stage);
+  new IntersectionObserver(([entry])=>{onScreen=entry.isIntersecting;requestDraw()}).observe(art);
+  document.addEventListener('visibilitychange',requestDraw);
+  window.addEventListener('scroll',followScroll,{passive:true});
+  scrollLayout.addEventListener('change',resize);
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;hero.classList.remove('live');stage.tabIndex=-1});
+  canvas.addEventListener('webglcontextrestored',()=>{lost=false;hero.classList.add('live');stage.tabIndex=0;resize()});
+  hero.classList.add('live');
+  stage.tabIndex=0;
+  setView(0);resize();
+}
+mount();
 
