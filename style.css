@@ -95,3 +95,16 @@ nav a,.foot-link{font-size:.91rem;text-decoration:none}nav a:hover,.foot-link:ho
 }
 @media(max-width:350px){.bar-inner{flex-wrap:wrap;padding:.65rem 0}nav{gap:.9rem}.hero h1{font-size:3.4rem}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.part{transition:none}}
+.form-control{display:flex;align-items:center;gap:.55rem;font-size:.85rem}
+.form-control[hidden]{display:none}
+.form-control input{accent-color:var(--lime);width:clamp(4.5rem,8vw,8.5rem);cursor:pointer}
+.form-control input:focus-visible{outline:2px solid var(--iris);outline-offset:.25rem}
+.timeline{margin:0;padding:0;list-style:none}
+.timeline li{position:relative;display:grid;grid-template-columns:9.5rem 1fr;gap:1.1rem;border-left:1px solid var(--paper-line);padding:0 0 2.2rem 1.4rem}
+.timeline li:last-child{padding-bottom:.2rem}
+.timeline li::before{content:"";position:absolute;left:-.27rem;top:.42rem;width:.48rem;height:.48rem;background:#715897;border-radius:50%}
+.timeline .dates{font:500 .85rem/1.6 var(--mono);color:#604d76}
+.timeline h3{font-size:1.2rem;letter-spacing:-.05em;line-height:1.45;margin:.1rem 0 .4rem}
+.timeline p{color:var(--paper-body);margin:0}.timeline .job-role{font-size:.87rem;color:#604d76}
+#notes{border-top:1px solid var(--paper-line)}
+@media(max-width:820px){.timeline li{grid-template-columns:1fr;gap:.4rem}}

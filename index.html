@@ -8,13 +8,13 @@
   <title>wannabidr — AI 작업 포트폴리오</title>
   <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
-  <script src="sculpture.js" defer></script>
+  <script src="sculpture.js" type="module"></script>
 </head>
 <body id="top">
 <a href="#main" class="skip">본문으로 건너뛰기</a>
 <header class="bar"><div class="wrap bar-inner">
   <a class="brand" href="#top" aria-label="wannabidr 처음으로"><img src="assets/mark.svg" width="35" height="35" alt="">wannabidr<span class="brand-period">.</span></a>
-  <nav aria-label="주요 메뉴"><a href="#method">작업 방식</a><a href="#work">프로젝트</a><a href="#notes">활동 기록</a></nav>
+  <nav aria-label="주요 메뉴"><a href="#method">작업 방식</a><a href="#work">프로젝트</a><a href="#career">이력</a><a href="#notes">강연</a></nav>
 </div></header>
 <main id="main">
   <section class="hero" aria-labelledby="hero-title"><div class="wrap hero-inner">
@@ -25,8 +25,8 @@
     </div>
     <figure class="art" aria-label="작업 방식을 표현한 생성형 곡면 그래픽">
       <span class="axis ax1" aria-hidden="true"></span><span class="axis ax2" aria-hidden="true"></span>
-      <div class="art-stage"><img class="poster" src="assets/sculpture.webp" width="700" height="640" alt="보랏빛과 연둣빛 곡면이 고리처럼 교차하는 추상 조형"><canvas id="sculpture" aria-hidden="true"></canvas></div>
-      <figcaption><span lang="en">Generative form</span><button id="motion" hidden type="button" aria-label="자동 회전" aria-pressed="false"><span id="motion-icon" aria-hidden="true">▷</span><span id="motion-text">회전 시작</span></button></figcaption>
+      <div class="art-stage"><img class="poster" src="assets/sculpture.webp" width="700" height="640" alt="보라색과 연두색 점들이 겹겹이 휘어진 리본을 이루는 입체 조형"><canvas id="sculpture" aria-hidden="true"></canvas></div>
+      <figcaption><label class="form-control" hidden>입자 응집도 <input id="cohesion" type="range" min="0" max="100" value="99"></label><button id="motion" hidden type="button" aria-label="자동 회전" aria-pressed="false"><span id="motion-icon" aria-hidden="true">▷</span><span id="motion-text">회전 시작</span></button></figcaption>
     </figure>
   </div></section>
   <section id="method" class="paper"><div class="wrap split">
@@ -48,15 +48,22 @@
       </fieldset>
     </div>
     <div class="project-detail"><article><h3>내가 풀고자 한 문제</h3><p>설계용역사는 수주 전부터 견적을 내기 위해 고객의 요구를 정리합니다. 저는 팀장으로서 설계 조건이 바뀔 때마다 되풀이되는 수정과 검사에 주목했고, 설계자가 변경 근거를 확인할 수 있는 흐름을 팀의 개발 목표로 잡았습니다.</p></article>
-    <article><h3>팀이 구현한 결과</h3><p>공개 시연판은 한국어 요청을 모델링 계획과 편집 가능한 OpenSCAD 코드로 바꿉니다. 형상과 출력 가능성, 요청과의 일치를 검사합니다. 베어링 예제에서는 볼과 홈이 겹친다는 검사 결과를 바탕으로 볼 반지름을 줄여 오류를 해결했습니다.</p></article></div>
-    <div class="work-links"><a href="https://youtu.be/THNZbOqVQsM">시연 영상</a><a href="https://github.com/pnucse-capstone2026/capstone-2026-team-14">공개 시연판 소스</a></div>
+    <article><h3>팀이 구현한 결과</h3><p>프로토타입은 한국어 요청을 모델링 계획과 편집 가능한 OpenSCAD 코드로 바꿉니다. 형상과 출력 가능성, 요청과의 일치를 검사합니다. 베어링 예제에서는 볼과 홈이 겹친다는 검사 결과를 바탕으로 볼 반지름을 줄여 오류를 해결했습니다.</p></article></div>
+  </div></section>
+  <section id="career" class="paper"><div class="wrap split">
+    <header class="section-title"><span class="index" lang="en">Experience</span><h2>걸어온 길<span>.</span></h2></header>
+    <ol class="timeline"><li><span class="dates">2026.05 — 현재</span><div><p class="job-role">팀장</p><h3>부산대학교 창업동아리 개인의창업</h3><p>기계설계자를 위한 AI 작업환경 CADGen-AX를 만드는 팀을 이끌고 있습니다.</p></div></li>
+<li><span class="dates">2025.07 — 현재</span><div><p class="job-role">에이전트팀장 · 학부연구생</p><h3>부산대학교 그래픽스 및 기하처리 연구실</h3><p>해운물류 도메인 지식 특화 에이전트와 자연어 3D 모델링·CAD 생성 등 에이전트 프로젝트 4개를 운영합니다. MCP, Google ADK, n8n을 활용해 왔습니다.</p></div></li>
+<li><span class="dates">2025.09 — 2025.12</span><div><p class="job-role">스터디팀장</p><h3>AID · 에이전트 마중나가기</h3><p>정보컴퓨터공학부 학술동아리에서 에이전트 시장과 서비스를 뒷받침하는 기반 기술을 분석하는 스터디를 주관했습니다.</p></div></li>
+<li><span class="dates">2025.03 — 2025.08</span><div><p class="job-role">스터디팀장</p><h3>AID · AX 앞서가기</h3><p>여러 언어 모델과 AI 서비스를 함께 써 보고 Cursor 같은 AI 개발 도구를 실제 작업에 적용하는 스터디를 이끌었습니다.</p></div></li>
+<li><span class="dates">2023.09 — 2025.01</span><div><p class="job-role">공동창업자 · CTO</p><h3>㈜레이어코퍼레이션</h3><p>근전도 기반 AI 웨어러블 운동 분석 서비스 WORKWAY를 개발·운영했습니다. 서비스 아키텍처와 기술 프로젝트 관리를 맡고 GCP 서버리스 백엔드와 Android·iOS 네이티브 앱 개발을 총괄했습니다.</p></div></li>
+<li><span class="dates">2022.11 — 2023.08</span><div><p class="job-role">개발팀장</p><h3>부산대학교 창업동아리 PlayGround</h3><p>창업동아리에서 개발팀을 이끌었습니다.</p></div></li></ol>
   </div></section>
   <section id="notes" class="paper"><div class="wrap split">
     <header class="section-title"><span class="index" lang="en">Field notes</span><h2>함께 써 보고,<br>함께 묻습니다<span>.</span></h2></header>
-    <div class="notes"><article><div class="kind">스터디</div><h3>AX 앞서가기 · 에이전트 마중나가기</h3><p>두 스터디를 이끌며 언어 모델과 Cursor 같은 도구를 작업에 적용해 봤습니다. 이후에는 동료들과 에이전트 시장을 살피고, 서비스가 어떤 기반 기술 위에서 작동하는지 분석했습니다.</p></article>
-    <article><div class="kind">강연 · 바이브코딩</div><h3>20년 공부하고 딸깍으로 대체되기</h3><p>코드를 만드는 방식이 달라진 지금, 개발자는 무엇을 배우고 AI와 어떻게 함께 일할지 이야기했습니다.</p></article>
-    <article><div class="kind">강연 · Super Intelligence</div><h3>AI가 가져올 미래</h3><p>“지금 AI를 어떻게 쓰고 있나요?”에서 시작해 “AI로 무엇을 만드나요?”를 물었습니다. AGI와 ASI에 관한 전망을 오늘 각자가 하는 일에 연결한 강연입니다.</p></article>
-    <article><div class="kind">개발 · 연구와 창업</div><h3>웨어러블에서 해운물류, 기계설계까지</h3><p>근전도 기반 운동 분석 서비스의 앱과 서버 개발을 총괄했습니다. 지금은 해운물류 지식과 자연어 3D 모델링 등 서로 다른 분야에 에이전트를 적용하며 팀을 이끌고 있습니다.</p></article></div>
+    <div class="notes"><article><div class="kind">2025.09.19 · 정보컴퓨터공학부 AID 세미나</div><h3>20년 공부하고 딸깍으로 대체되기</h3><p>코드를 만드는 방식이 달라진 지금, 개발자는 무엇을 배우고 AI와 어떻게 함께 일할지 이야기했습니다.</p></article>
+    <article><div class="kind">2026.11.22 · SouthBridge Day 2026 · Super Intelligence</div><h3>AI가 가져올 미래</h3><p>“지금 AI를 어떻게 쓰고 있나요?”에서 시작해 “AI로 무엇을 만드나요?”를 물었습니다. AGI와 ASI에 관한 전망을 오늘 각자가 하는 일에 연결한 강연입니다.</p></article>
+    </div>
   </div></section>
 </main>
 <footer><div class="wrap footer-inner"><a class="brand" href="#top"><img src="assets/mark.svg" width="35" height="35" alt="">wannabidr<span class="brand-period">.</span></a><a class="foot-link" href="https://github.com/wannabidr">GitHub</a><a class="foot-link" href="#top">맨 위로</a></div></footer>
